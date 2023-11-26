@@ -4,8 +4,10 @@ import { FormEvent, useState } from "react";
 import Inputs from "./components/Inputs";
 import Days from "./components/Days";
 import Footer from "./components/Footer";
+import Loading from "./components/icons/Loading";
 
 function App() {
+  const [loading, setLoading] = useState(false);
   const [clicked, setClicked] = useState<
     "segunda" | "terca" | "quarta" | "quinta" | "sexta"
   >("segunda");
@@ -22,8 +24,19 @@ function App() {
     turma: "",
   });
 
+  const retrieveData = () => {
+    const dataFromLocalStorage = localStorage.getItem("dados_cadastrados");
+    if (dataFromLocalStorage !== null) {
+      const savedData = JSON.parse(dataFromLocalStorage);
+      console.log(savedData);
+    } else {
+      console.log("Nenhum dado encontrado.");
+    }
+  };
+
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
 
     const newErrors: {
       professor: boolean;
@@ -37,20 +50,50 @@ function App() {
 
     if (formValues.professor.trim() === "") {
       newErrors.professor = true;
+      setLoading(false);
     }
 
     if (formValues.disciplina.trim() === "") {
       newErrors.disciplina = true;
+      setLoading(false);
     }
 
     if (formValues.turma.trim() === "") {
       newErrors.turma = true;
+      setLoading(false);
     }
 
     setErrors(newErrors);
 
     if (Object.values(newErrors).every((error) => !error)) {
+      setLoading(false)
+      alert(`Cadastro feito com sucesso!`)
+      const dataFromLocalStorage = localStorage.getItem("dados_cadastrados");
+      if (dataFromLocalStorage !== null) {
+        const savedData = JSON.parse(dataFromLocalStorage) || [];
+        savingData([...savedData, formValues]);
+      } else {
+        savingData([formValues]);
+      }
+
+      retrieveData();
     }
+  };
+
+  const savingData = (data: any) => {
+    localStorage.setItem("dados_cadastrados", JSON.stringify(data));
+
+    setFormValues({
+      professor: "",
+      disciplina: "",
+      turma: "",
+    });
+
+    setErrors({
+      professor: false,
+      disciplina: false,
+      turma: false,
+    });
   };
 
   const cancelButton = () => {
@@ -129,26 +172,31 @@ function App() {
                     placeholder="Selecione o final"
                   />
                 </div>
-                <div className="flex items-center justify-start md:justify-end gap-x-6">
+                {/* <div className="flex items-center justify-start md:justify-end gap-x-6">
                   <span className="cursor-pointer px-3 py-1 text-lg transition-all hover:opacity-80 hover:bg-gray-300 border-2 border-black font-semibold">
                     +
                   </span>
                   <span className="cursor-pointer px-3 py-1 text-lg transition-all hover:opacity-80 border-2 border-black font-black text-white bg-green-500">
                     ✓
                   </span>
-                </div>
+                </div> */}
               </div>
 
-              <div className="flex items-center justify-center sm:justify-end gap-x-6 sm:pt-0 pt-12">
-                <span
-                  onClick={cancelButton}
-                  className="cursor-pointer text-[#C70000] transition-all hover:opacity-90 hover:underline"
-                >
-                  Cancelar
-                </span>
-                <button type="submit" className="cursor-pointer transition-colors border-transparent w-28 h-12 rounded-[24px] text-white bg-[#893D3D] hover:border-2 hover:border-[#893D3D] hover:bg-white hover:text-black ">
-                  Salvar
-                </button>
+              <div className="flex items-end justify-center sm:justify-end sm:pt-0 pt-12">
+                <div className="flex items-center gap-x-6">
+                  <span
+                    onClick={cancelButton}
+                    className="cursor-pointer text-[#C70000] transition-all hover:opacity-90 hover:underline"
+                  >
+                    Cancelar
+                  </span>
+                  <button
+                    type="submit"
+                    className="cursor-pointer transition-colors border-transparent w-28 h-12 rounded-[24px] text-white bg-[#893D3D] hover:border-2 hover:border-[#893D3D] hover:bg-white hover:text-black flex justify-center items-center"
+                  >
+                    {loading ? <Loading /> : "Salvar"}
+                  </button>
+                </div>
               </div>
             </article>
           </form>
