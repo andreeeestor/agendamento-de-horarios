@@ -1,7 +1,6 @@
 import React from "react";
 
-interface LoadingProps {}
-export default function Loading(props: LoadingProps) {
+export default function Loading() {
   return (
     <>
       <svg
