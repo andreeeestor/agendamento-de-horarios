@@ -4,7 +4,6 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Inputs from "./components/Inputs";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import Days from "./components/Days";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import Footer from "./components/Footer";
 import Loading from "./components/icons/Loading";
@@ -12,13 +11,8 @@ import Loading from "./components/icons/Loading";
 function App() {
   const localizer = momentLocalizer(moment);
   const [loading, setLoading] = useState(false);
-  const [clicked, setClicked] = useState<
-    "segunda" | "terca" | "quarta" | "quinta" | "sexta"
-  >("segunda");
-
   const [events, setEvents] = useState([]);
 
-  // Obter eventos cadastrados e convertê-los para o formato aceito pelo react-big-calendar
   useEffect(() => {
     const dataFromLocalStorage = localStorage.getItem("dados_cadastrados");
     if (dataFromLocalStorage !== null) {
