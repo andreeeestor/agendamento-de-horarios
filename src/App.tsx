@@ -1,6 +1,6 @@
 import * as React from "react";
 import Header from "./components/Header";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import Inputs from "./components/Inputs";
 import Days from "./components/Days";
 import Footer from "./components/Footer";
@@ -16,12 +16,18 @@ function App() {
     professor: false,
     disciplina: false,
     turma: false,
+    duracao: false,
+    inicioAulas: false,
+    fimAulas: false,
   });
 
   const [formValues, setFormValues] = useState({
     professor: "",
     disciplina: "",
     turma: "",
+    duracao: 0,
+    inicioAulas: "",
+    fimAulas: "",
   });
 
   const retrieveData = () => {
@@ -42,10 +48,16 @@ function App() {
       professor: boolean;
       disciplina: boolean;
       turma: boolean;
+      duracao: boolean;
+      inicioAulas: boolean;
+      fimAulas: boolean;
     } = {
       professor: false,
       disciplina: false,
       turma: false,
+      duracao: false,
+      inicioAulas: false,
+      fimAulas: false,
     };
 
     if (formValues.professor.trim() === "") {
@@ -66,9 +78,31 @@ function App() {
     setErrors(newErrors);
 
     if (Object.values(newErrors).every((error) => !error)) {
-      setLoading(false)
-      alert(`Cadastro feito com sucesso!`)
       const dataFromLocalStorage = localStorage.getItem("dados_cadastrados");
+      if (dataFromLocalStorage !== null) {
+        const savedData = JSON.parse(dataFromLocalStorage);
+        const professorAlreadyExists = savedData.some(
+          (item: any) =>
+            item.professor === formValues.professor &&
+            ((item.inicioAulas <= formValues.inicioAulas &&
+              formValues.inicioAulas <= item.fimAulas) ||
+              (item.inicioAulas <= formValues.fimAulas &&
+                formValues.fimAulas <= item.fimAulas) ||
+              (formValues.inicioAulas <= item.inicioAulas &&
+                item.inicioAulas <= formValues.fimAulas) ||
+              (formValues.inicioAulas <= item.fimAulas &&
+                item.fimAulas <= formValues.fimAulas))
+        );
+
+        if (professorAlreadyExists) {
+          setLoading(false);
+          alert("Professor já está cadastrado em aulas nesse período.");
+          return;
+        }
+      }
+
+      setLoading(false);
+      alert(`Cadastro feito com sucesso!`);
       if (dataFromLocalStorage !== null) {
         const savedData = JSON.parse(dataFromLocalStorage) || [];
         savingData([...savedData, formValues]);
@@ -80,33 +114,69 @@ function App() {
     }
   };
 
-  const savingData = (data: any) => {
-    localStorage.setItem("dados_cadastrados", JSON.stringify(data));
-
+  const resetForm = () => {
     setFormValues({
       professor: "",
       disciplina: "",
       turma: "",
+      duracao: 0,
+      inicioAulas: "",
+      fimAulas: "",
     });
 
     setErrors({
       professor: false,
       disciplina: false,
       turma: false,
+      duracao: false,
+      inicioAulas: false,
+      fimAulas: false,
     });
   };
 
+  const savingData = (data: any) => {
+    localStorage.setItem("dados_cadastrados", JSON.stringify(data));
+  };
+
   const cancelButton = () => {
-    setFormValues({
-      professor: "",
-      disciplina: "",
-      turma: "",
-    });
-    setErrors({
-      professor: false,
-      disciplina: false,
-      turma: false,
-    });
+    resetForm();
+  };
+
+  const isWeekend = (date: any) => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+
+  const calculateEndDate = (startDate: any, duration: any) => {
+    const start = new Date(startDate);
+    let daysToAdd = duration;
+
+    while (daysToAdd > 0) {
+      start.setDate(start.getDate() + 1);
+      if (!isWeekend(start)) {
+        daysToAdd--;
+      }
+    }
+
+    return start.toISOString().split("T")[0];
+  };
+
+  const handleDurationChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const duration = parseInt(e.target.value);
+    if (duration > 0) {
+      const startDate = new Date();
+      const endDate = calculateEndDate(startDate, duration);
+
+      setFormValues({
+        ...formValues,
+        duracao: duration,
+        inicioAulas: startDate.toISOString().split("T")[0],
+        fimAulas: endDate,
+      });
+      setErrors({ ...errors, duracao: false });
+    } else {
+      setErrors({ ...errors, duracao: true });
+    }
   };
 
   return (
@@ -118,6 +188,7 @@ function App() {
           <form onSubmit={onSubmit} className="">
             <div className="flex md:flex-row flex-col items-center gap-y-12 md:gap-x-12 py-12">
               <Inputs
+                type="text"
                 value={formValues.professor}
                 label={"Professor:"}
                 error={errors.professor}
@@ -129,6 +200,7 @@ function App() {
                 }
               />
               <Inputs
+                type="text"
                 value={formValues.disciplina}
                 label={"Disciplina:"}
                 error={errors.disciplina}
@@ -140,6 +212,7 @@ function App() {
                 }
               />
               <Inputs
+                type="text"
                 value={formValues.turma}
                 label={"Turma:"}
                 error={errors.turma}
@@ -152,37 +225,49 @@ function App() {
               />
             </div>
 
-            <article className="flex flex-col md:flex-row flex-end justify-between">
-              <div className="flex flex-col gap-y-3 max-w-[714px]">
-                <h1 className="font-semibold">Horários:</h1>
-                <div className="flex sm:flex-row flex-col sm:items-center gap-y-6 sm:gap-x-6">
-                  <input
-                    type="date"
-                    className="p-2 border-2 border-black placeholder:italic shadow-sm"
-                    placeholder="Selecione o dia"
+            <article className="flex flex-col lg:flex-row flex-end justify-between">
+              <div className="flex md:flex-row flex-col max-w-[714px] lg:gap-y-0 gap-y-12 relative">
+                <article className="">
+                  <Inputs
+                    type="number"
+                    label="Duração (em dias):"
+                    value={formValues.duracao.toString()}
+                    error={errors.duracao}
+                    onChange={handleDurationChange}
+                    min="1"
                   />
-                  <input
-                    type="time"
-                    className="p-2 border-2 border-black placeholder:italic shadow-sm"
-                    placeholder="Selecione o início"
-                  />
-                  <input
-                    type="time"
-                    className="p-2 border-2 border-black placeholder:italic shadow-sm"
-                    placeholder="Selecione o final"
-                  />
-                </div>
-                {/* <div className="flex items-center justify-start md:justify-end gap-x-6">
-                  <span className="cursor-pointer px-3 py-1 text-lg transition-all hover:opacity-80 hover:bg-gray-300 border-2 border-black font-semibold">
-                    +
-                  </span>
-                  <span className="cursor-pointer px-3 py-1 text-lg transition-all hover:opacity-80 border-2 border-black font-black text-white bg-green-500">
-                    ✓
-                  </span>
-                </div> */}
+                </article>
+                {formValues.duracao > 0 && (
+                  <article className="flex md:flex-row flex-col gap-y-12 md:gap-x-12 items-center md:absolute md:bottom-0 md:translate-x-[250px]">
+                    <Inputs
+                      type="date"
+                      disabled
+                      label="Data de ínicio:"
+                      value={formValues.inicioAulas}
+                      onChange={(e) =>
+                        setFormValues({
+                          ...formValues,
+                          inicioAulas: e.target.value,
+                        })
+                      }
+                    />
+                    <Inputs
+                      type="date"
+                      disabled
+                      label="Data de Fim:"
+                      value={formValues.fimAulas}
+                      onChange={(e) =>
+                        setFormValues({
+                          ...formValues,
+                          fimAulas: e.target.value,
+                        })
+                      }
+                    />
+                  </article>
+                )}
               </div>
 
-              <div className="flex items-end justify-center sm:justify-end sm:pt-0 pt-12">
+              <div className="flex items-end justify-center sm:justify-end md:pt-0 pt-12">
                 <div className="flex items-center gap-x-6">
                   <span
                     onClick={cancelButton}
