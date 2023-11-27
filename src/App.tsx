@@ -1,16 +1,37 @@
 import * as React from "react";
 import Header from "./components/Header";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Inputs from "./components/Inputs";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
 import Days from "./components/Days";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import Footer from "./components/Footer";
 import Loading from "./components/icons/Loading";
 
 function App() {
+  const localizer = momentLocalizer(moment);
   const [loading, setLoading] = useState(false);
   const [clicked, setClicked] = useState<
     "segunda" | "terca" | "quarta" | "quinta" | "sexta"
   >("segunda");
+
+  const [events, setEvents] = useState([]);
+
+  // Obter eventos cadastrados e convertê-los para o formato aceito pelo react-big-calendar
+  useEffect(() => {
+    const dataFromLocalStorage = localStorage.getItem("dados_cadastrados");
+    if (dataFromLocalStorage !== null) {
+      const savedData = JSON.parse(dataFromLocalStorage);
+      const formattedEvents = savedData.map((item: any, index: any) => ({
+        id: index,
+        title: `${item.disciplina} - ${item.turma} | ${item.professor}`,
+        start: new Date(item.inicioAulas),
+        end: new Date(item.fimAulas),
+      }));
+      setEvents(formattedEvents);
+    }
+  }, []);
 
   const [errors, setErrors] = useState({
     professor: false,
@@ -111,6 +132,7 @@ function App() {
       }
 
       retrieveData();
+      window.location.reload();
     }
   };
 
@@ -288,92 +310,14 @@ function App() {
         </section>
 
         <section className="mx-auto max-w-[1440px] py-20">
-          <div className="flex sm:flex-row flex-col items-center gap-x-5">
-            <Days
-              onClicked={() => setClicked("segunda")}
-              className={`${
-                clicked === "segunda"
-                  ? "text-white bg-[#893D3D] shadow-lg"
-                  : "text-black bg-transparent"
-              }`}
-              day="segunda"
-            />
-            <Days
-              onClicked={() => setClicked("terca")}
-              className={`${
-                clicked === "terca"
-                  ? "text-white bg-[#893D3D] shadow-lg"
-                  : "text-black bg-transparent"
-              }`}
-              day="terça"
-            />
-            <Days
-              onClicked={() => setClicked("quarta")}
-              className={`${
-                clicked === "quarta"
-                  ? "text-white bg-[#893D3D] shadow-lg"
-                  : "text-black bg-transparent"
-              }`}
-              day="quarta"
-            />
-            <Days
-              onClicked={() => setClicked("quinta")}
-              className={`${
-                clicked === "quinta"
-                  ? "text-white bg-[#893D3D] shadow-lg"
-                  : "text-black bg-transparent"
-              }`}
-              day="quinta"
-            />
-            <Days
-              onClicked={() => setClicked("sexta")}
-              className={`${
-                clicked === "sexta"
-                  ? "text-white bg-[#893D3D] shadow-lg"
-                  : "text-black bg-transparent"
-              }`}
-              day="sexta"
-            />
-          </div>
-          <div className="py-5"></div>
-          <div className="grid place-items-center grid-rows-6 grid-cols-6">
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-            <div className="w-full h-14 border-[1px] border-[#893D3D]"></div>
-          </div>
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            defaultView="week"
+            views={["week", "day", "agenda"]}
+          />
         </section>
       </main>
       <Footer />
